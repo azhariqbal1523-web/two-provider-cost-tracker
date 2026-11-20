@@ -34,7 +34,10 @@ def ask_gemini(prompt):
     if not api_key:
         raise ValueError("GEMINI_API_KEY is missing from .env")
 
-    client = genai.Client(api_key=api_key)
+    client = genai.Client(
+    api_key=api_key,
+    http_options={"timeout": 30000}
+)
     start = time.time()
 
     response = client.models.generate_content(
@@ -132,13 +135,20 @@ def main():
                 f"{result['output_tokens']:>8} "
                 f"{result['seconds']:>9} "
                 f"${result['cost_usd']:>11.8f}"
-            )
+            ) 
+
+        old_results = []
+
+        if os.path.exists("results.json"):
+            with open("results.json", "r", encoding="utf-8") as file:
+                old_results = json.load(file)
+
+        old_results.extend(results)
 
         with open("results.json", "w", encoding="utf-8") as file:
-            json.dump(results, file, indent=4, ensure_ascii=False)
+            json.dump(old_results, file, indent=4, ensure_ascii=False)
 
         print("\nResults saved in results.json")
-
 
 if __name__ == "__main__":
     main()
